@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#f7f9f3" />
+    <title>Доска задач</title>
+    <script>
+      try {
+        const savedTheme = localStorage.getItem("task-board-theme");
+        if (savedTheme === "dark" || (!savedTheme && matchMedia("(prefers-color-scheme: dark)").matches)) {
+          document.documentElement.classList.add("dark");
+        }
+      } catch (_) {
+        if (matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.classList.add("dark");
+      }
+    </script>
+    <link rel="stylesheet" href="styles.css" />
+    <script src="script.js" defer></script>
+  </head>
+  <body>
+    <div class="app">
+      <header class="app-header">
+        <div class="header-main">
+          <h1>Доска задач</h1>
+          <button type="button" class="background-button" id="background-button" aria-label="Настроить фон доски" aria-haspopup="dialog" aria-controls="background-dialog" title="Выбрать фон и включить анимацию"><span aria-hidden="true">◐</span> Фон</button>
+          <div class="board-tabs" id="board-tabs" role="tablist" aria-label="Доски"></div>
+        </div>
+        <div class="header-actions">
+          <input type="search" id="board-search" class="board-search" placeholder="Поиск карточек" aria-label="Поиск по карточкам" />
+          <select id="theme-select" class="header-select" aria-label="Дизайн-система">
+            <option value="light">Светлая</option><option value="dark">Тёмная</option>
+            <option value="pastel">Пастельная</option><option value="bright">Яркая</option>
+            <option value="minimal">Минималистичная</option>
+          </select>
+          <button type="button" class="header-icon" id="compact-toggle" aria-label="Компактный режим" title="Компактный режим">▥</button>
+          <button type="button" class="header-icon" id="sound-toggle" aria-label="Включить звуки" title="Звуки">♪</button>
+          <button type="button" class="header-icon" id="trash-button" aria-label="Корзина" title="Корзина">♲</button>
+          <button type="button" class="header-icon" id="presentation-button" aria-label="Режим презентации" title="Режим презентации">▣</button>
+          <button type="button" class="header-icon" id="print-button" aria-label="Печать доски" title="Печать доски">⎙</button>
+          <button type="button" class="theme-toggle" id="theme-toggle" aria-label="Переключить тему" aria-pressed="false" title="Переключить тему"><span class="theme-icon" aria-hidden="true"></span></button>
+          <div class="file-menu-wrap">
+            <button type="button" class="file-button" id="file-button" aria-expanded="false" aria-controls="file-menu">Файл <span aria-hidden="true">▾</span></button>
+            <div class="file-menu" id="file-menu" hidden>
+              <button type="button" id="load-board">Загрузить</button>
+              <button type="button" id="save-board">Сохранить</button>
+            </div>
+            <input type="file" id="board-file" accept=".txt,text/plain" hidden />
+          </div>
+        </div>
+      </header>
+
+      <main class="board-area">
+        <div class="board-scroll" id="board-scroll" aria-label="Доска задач" tabindex="0">
+          <div class="board" id="board"></div>
+        </div>
+      </main>
+    </div>
+    <div class="zoom-controls" aria-label="Масштаб доски">
+      <button type="button" id="zoom-out" aria-label="Уменьшить масштаб">−</button>
+      <span id="zoom-value">100%</span>
+      <button type="button" id="zoom-in" aria-label="Увеличить масштаб">+</button>
+    </div>
+    <div class="notice" id="notice" role="status" aria-live="polite" hidden></div>
+    <div class="color-palette" id="color-palette" role="group" aria-label="Палитра цветов" hidden></div>
+    <input id="quick-attachment-file" class="file-input-visually-hidden" type="file" multiple tabindex="-1" aria-hidden="true" />
+
+    <dialog class="card-dialog" id="card-dialog" aria-labelledby="dialog-title">
+      <form id="card-form" class="card-form">
+        <div class="dialog-heading">
+          <div>
+            <h2 id="dialog-title">Новая карточка</h2>
+            <p id="dialog-hint" class="dialog-hint"></p>
+          </div>
+          <button type="button" class="icon-button close-button" id="close-dialog" aria-label="Закрыть форму">×</button>
+        </div>
+
+        <label for="card-title">Название</label>
+        <input id="card-title" name="title" type="text" maxlength="120" autocomplete="off" required />
+
+        <label for="card-description">Описание</label>
+        <textarea id="card-description" name="description" rows="5" maxlength="2000"></textarea>
+
+        <div class="form-section">
+          <span class="form-section-title">Обложка</span>
+          <img id="cover-preview" class="cover-preview" alt="Обложка карточки" hidden />
+          <div class="inline-actions"><label class="button button-secondary upload-button">Загрузить изображение<input id="card-cover" class="file-input-visually-hidden" type="file" accept="image/*" /></label><button type="button" class="button button-secondary" id="remove-cover">Убрать</button></div>
+        </div>
+
+        <div class="form-section attachment-section">
+          <span class="form-section-title">📎 Изображения и файлы</span>
+          <label class="button button-primary upload-button">Добавить изображение или файл<input id="card-attachments" class="file-input-visually-hidden" type="file" multiple /></label>
+          <p class="form-help">Прикреплённое изображение появится маленьким превью на карточке.</p>
+          <div id="attachment-editor" class="attachment-editor"></div>
+        </div>
+
+        <div class="form-section">
+          <span class="form-section-title">Стикеры</span>
+          <div id="sticker-choices" class="sticker-choices"></div>
+        </div>
+
+        <div class="form-section option-row">
+          <label><input type="checkbox" id="card-pinned" /> Закрепить</label>
+          <label><input type="checkbox" id="card-locked" /> Заблокировать</label>
+          <label><input type="checkbox" id="card-large" /> Крупная плитка</label>
+        </div>
+
+        <div class="form-section">
+          <span class="form-section-title">Чек-лист</span>
+          <div id="checklist-editor" class="checklist-editor"></div>
+          <button type="button" class="button button-secondary" id="add-checklist-item">+ Пункт</button>
+        </div>
+
+        <div class="dialog-actions">
+          <button type="button" class="button button-secondary" id="duplicate-card" hidden>Создать копию</button>
+          <button type="button" class="button button-secondary" id="cancel-card">Отмена</button>
+          <button type="submit" class="button button-primary" id="submit-card">Создать</button>
+        </div>
+      </form>
+    </dialog>
+    <dialog class="utility-dialog" id="board-name-dialog" aria-labelledby="board-name-title">
+      <form id="board-name-form" class="utility-content">
+        <div class="utility-heading"><h2 id="board-name-title">Новая доска</h2><button type="button" class="icon-button" data-close-dialog="board-name-dialog" aria-label="Закрыть">×</button></div>
+        <label class="board-name-label" for="board-name-field">Название</label>
+        <input id="board-name-field" class="board-name-field" type="text" maxlength="80" required />
+        <div class="dialog-actions"><button type="button" class="button button-secondary" data-close-dialog="board-name-dialog">Отмена</button><button type="submit" class="button button-primary">Сохранить</button></div>
+      </form>
+    </dialog>
+    <dialog class="utility-dialog" id="background-dialog" aria-labelledby="background-title">
+      <div class="utility-content"><div class="utility-heading"><h2 id="background-title">Фон доски</h2><button type="button" class="icon-button" data-close-dialog="background-dialog" aria-label="Закрыть">×</button></div>
+        <p class="background-hint">Выберите готовый фон или загрузите своё изображение.</p>
+        <div id="background-options" class="background-options"></div>
+        <div id="custom-background-preview" class="custom-background-preview" hidden><img id="background-preview-image" alt="Текущее фоновое изображение доски" /><span>Загруженное изображение</span></div>
+        <label class="button button-secondary upload-button">Загрузить свой фон<input id="board-background-file" class="file-input-visually-hidden" type="file" accept="image/*" /></label>
+        <label class="live-background-option"><input type="checkbox" id="live-background" /><span><strong>Живой фон</strong><small>Мягкие движущиеся световые пятна</small></span></label>
+      </div>
+    </dialog>
+    <dialog class="utility-dialog" id="trash-dialog" aria-labelledby="trash-title">
+      <div class="utility-content"><div class="utility-heading"><h2 id="trash-title">Корзина</h2><button type="button" class="icon-button" data-close-dialog="trash-dialog" aria-label="Закрыть">×</button></div><div id="trash-list" class="trash-list"></div></div>
+    </dialog>
+    <dialog class="presentation-dialog" id="presentation-dialog" aria-label="Презентация карточек">
+      <button type="button" class="icon-button presentation-close" data-close-dialog="presentation-dialog" aria-label="Закрыть">×</button>
+      <button type="button" class="presentation-arrow" id="presentation-prev" aria-label="Предыдущая карточка">‹</button>
+      <div id="presentation-content" class="presentation-content"></div>
+      <button type="button" class="presentation-arrow" id="presentation-next" aria-label="Следующая карточка">›</button>
+    </dialog>
+  </body>
+</html>
