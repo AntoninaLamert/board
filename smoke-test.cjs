@@ -134,15 +134,18 @@ function startApp() {
     "card creation autosaves");
   const firstId = app.api.getColumns()[0].cards[0].id;
   const firstColumnId = app.api.getColumns()[0].id;
-  const attachButton = app.fields.board.querySelectorAll(".card-attach-button")[0];
-  assert.ok(attachButton, "the card has a visible attachment action");
-  attachButton.click();
-  app.fields["quick-attachment-file"].files = [{ name: "photo.png", type: "image/png",
+  assert.equal(app.fields.board.querySelectorAll(".card-attach-button").length, 0,
+    "attachment action is inside the card form, not on the tile");
+  app.fields.board.children[0].children[1].children[0].click();
+  app.fields["card-attachments"].files = [{ name: "photo.png", type: "image/png",
     size: 5 * 1024 * 1024, data: "data:image/png;base64,QUJDRA==" }];
-  app.fields["quick-attachment-file"].fire("change");
+  app.fields["card-attachments"].fire("change");
   await new Promise(setImmediate);
+  assert.equal(app.fields["attachment-editor"].children.length, 1,
+    "the card form lists the selected image");
+  app.fields["card-form"].fire("submit");
   assert.equal(app.api.getColumns()[0].cards[0].attachments[0].name, "photo.png",
-    "the paperclip attaches an image directly to the card");
+    "the card form attaches an image");
   assert.equal(app.api.getColumns()[0].cards[0].attachments[0].type, "image/jpeg",
     "the image is compressed before storage");
   assert.ok(app.fields.board.querySelectorAll(".attachment-thumb").length,

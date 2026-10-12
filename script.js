@@ -406,22 +406,11 @@ function makeCard(cardData, columnId) {
   lockButton.title = cardData.locked ? "Разблокировать карточку" : "Заблокировать карточку";
   lockButton.setAttribute("aria-label", lockButton.title);
   lockButton.addEventListener("click", event => { event.stopPropagation(); toggleCardLock(columnId, cardData.id); });
-  const attachButton = document.createElement("button");
-  attachButton.type = "button";
-  attachButton.className = "card-attach-button";
-  attachButton.textContent = "📎";
-  attachButton.title = "Прикрепить изображение или файл";
-  attachButton.setAttribute("aria-label", `Прикрепить изображение или файл к карточке ${cardData.title}`);
-  attachButton.disabled = cardData.locked;
-  attachButton.addEventListener("click", event => {
-    event.stopPropagation();
-    openQuickAttachmentPicker(columnId, cardData.id);
-  });
   if (cardData.pinned) {
     const pin = document.createElement("span"); pin.className = "card-pin"; pin.textContent = "📌";
     pin.title = "Закреплена"; heading.append(pin);
   }
-  heading.append(deleteButton, title, attachButton, lockButton, dragHandle);
+  heading.append(deleteButton, title, lockButton, dragHandle);
   card.append(colorButton, heading);
   if (cardData.description) {
     const description = document.createElement("p");
@@ -1007,7 +996,7 @@ function finishDrag(cancel = false) {
 
 board.addEventListener("pointerdown", event => {
   if (dragState || event.button !== 0 || event.isPrimary === false || dialog.open) return;
-  if (event.target.closest(".card-color-button, .delete-card-icon, .card-lock-button, .card-attach-button, .color-picker, .delete-column, .column-action, .column-icon-select, .column-title")) return;
+  if (event.target.closest(".card-color-button, .delete-card-icon, .card-lock-button, .color-picker, .delete-column, .column-action, .column-icon-select, .column-title")) return;
   const handle = event.target.closest(".column-drag-handle");
   const card = handle ? null : event.target.closest(".card");
   if (!handle && !card) return;
@@ -1060,8 +1049,6 @@ let cardDraft = null;
 const coverInput = document.getElementById("card-cover");
 const coverPreview = document.getElementById("cover-preview");
 const attachmentInput = document.getElementById("card-attachments");
-const quickAttachmentInput = document.getElementById("quick-attachment-file");
-let quickAttachmentTarget = null;
 const stickerChoices = document.getElementById("sticker-choices");
 const checklistEditor = document.getElementById("checklist-editor");
 const attachmentEditor = document.getElementById("attachment-editor");
@@ -1229,24 +1216,6 @@ attachmentInput.addEventListener("change", async () => {
   const draft = cardDraft;
   if (!draft) return;
   await addAttachmentFiles(files, draft.attachments, () => draft === cardDraft, renderAttachmentEditor);
-});
-function openQuickAttachmentPicker(columnId, cardId) {
-  quickAttachmentTarget = { boardId: activeBoard().id, columnId, cardId };
-  quickAttachmentInput.value = "";
-  quickAttachmentInput.click();
-}
-quickAttachmentInput.addEventListener("change", async () => {
-  const files = [...(quickAttachmentInput.files || [])]; quickAttachmentInput.value = "";
-  const target = quickAttachmentTarget; quickAttachmentTarget = null;
-  if (!files.length || !target) return;
-  const findCard = () => workspace.boards.find(item => item.id === target.boardId)
-    ?.columns.find(item => item.id === target.columnId)?.cards.find(item => item.id === target.cardId);
-  const card = findCard();
-  if (!card || card.locked) { showNotice("Сначала разблокируйте карточку.", true); return; }
-  const added = await addAttachmentFiles(files, card.attachments, () => findCard() === card && !card.locked, () => {
-    saveColumns(); renderBoard();
-  });
-  if (added) showNotice(`Прикреплено файлов: ${added}. Изображение видно на плитке карточки.`);
 });
 ["card-pinned", "card-locked", "card-large"].forEach(id => {
   document.getElementById(id).addEventListener("change", event => {
