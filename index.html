@@ -15,8 +15,8 @@
         if (matchMedia("(prefers-color-scheme: dark)").matches) document.documentElement.classList.add("dark");
       }
     </script>
-    <link rel="stylesheet" href="styles.css" />
-    <script src="script.js" defer></script>
+    <link rel="stylesheet" href="styles.css?v=20261012-1" />
+    <script src="script.js?v=20261012-1" defer></script>
   </head>
   <body>
     <div class="app">
@@ -63,6 +63,8 @@
     </div>
     <div class="notice" id="notice" role="status" aria-live="polite" hidden></div>
     <div class="color-palette" id="color-palette" role="group" aria-label="Палитра цветов" hidden></div>
+    <!-- Compatibility for a previously cached script; attachment controls stay inside the card form. -->
+    <input id="quick-attachment-file" class="file-input-visually-hidden" type="file" multiple tabindex="-1" aria-hidden="true" />
 
     <dialog class="card-dialog" id="card-dialog" aria-labelledby="dialog-title">
       <form id="card-form" class="card-form">

@@ -5,6 +5,7 @@ const vm = require("node:vm");
 
 const source = fs.readFileSync(path.join(__dirname, "script.js"), "utf8");
 const html = fs.readFileSync(path.join(__dirname, "index.html"), "utf8");
+const htmlIds = new Set([...html.matchAll(/\bid="([^"]+)"/g)].map(match => match[1]));
 const storage = new Map();
 
 function startApp() {
@@ -73,7 +74,7 @@ function startApp() {
   fields["theme-toggle"].append(new Element("span"));
   fields["file-menu"].hidden = true;
   const document = {
-    getElementById(id) { return fields[id]; },
+    getElementById(id) { return htmlIds.has(id) ? fields[id] : null; },
     createElement(tag) { return new Element(tag); },
     querySelector(selector) { return selector === 'meta[name="theme-color"]' ? { content: "" } : null; },
     querySelectorAll() { return []; },
@@ -106,6 +107,7 @@ function startApp() {
 
 (async () => {
   const app = startApp();
+  assert.ok(htmlIds.has("quick-attachment-file"), "previously cached scripts can still initialize");
   assert.match(html, /id="background-button"[^>]*>\s*<span[^>]*>◐<\/span>\s*Фон<\/button>/,
     "the background settings have a labeled header button");
   assert.equal(app.api.getWorkspace().boards.length, 1);
