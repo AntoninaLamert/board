@@ -395,7 +395,7 @@ function makeCard(cardData, columnId) {
   dragHandle.className = "card-drag-handle";
   dragHandle.title = "Перетащить карточку (также доступны клавиши со стрелками)";
   dragHandle.setAttribute("aria-label", `Перетащить карточку ${cardData.title}; клавиши со стрелками меняют положение`);
-  dragHandle.textContent = "⠿";
+  dragHandle.textContent = "👆";
   dragHandle.disabled = cardData.locked;
   dragHandle.addEventListener("keydown", event => handleCardKeydown(event, cardData.id, columnId));
   dragHandle.addEventListener("click", event => event.stopPropagation());
@@ -555,7 +555,7 @@ function renderBoard() {
     dragHandle.className = "column-drag-handle";
     dragHandle.title = "Перетащить колонку (также доступны стрелки влево и вправо)";
     dragHandle.setAttribute("aria-label", `Перетащить колонку ${columnData.name || "без названия"}; стрелки влево и вправо меняют положение`);
-    dragHandle.textContent = "⠿";
+    dragHandle.textContent = "👆";
     dragHandle.addEventListener("keydown", event => handleColumnKeydown(event, columnData.id));
     const deleteColumnButton = document.createElement("button");
     deleteColumnButton.type = "button";
