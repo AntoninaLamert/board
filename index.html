@@ -16,7 +16,7 @@
       }
     </script>
     <link rel="stylesheet" href="styles.css?v=20261012-1" />
-    <script src="script.js?v=20261012-1" defer></script>
+    <script src="script.js?v=20261012-2" defer></script>
   </head>
   <body>
     <div class="app">
@@ -28,11 +28,7 @@
         </div>
         <div class="header-actions">
           <input type="search" id="board-search" class="board-search" placeholder="Поиск карточек" aria-label="Поиск по карточкам" />
-          <select id="theme-select" class="header-select" aria-label="Дизайн-система">
-            <option value="light">Светлая</option><option value="dark">Тёмная</option>
-            <option value="pastel">Пастельная</option><option value="bright">Яркая</option>
-            <option value="minimal">Минималистичная</option>
-          </select>
+          <input type="hidden" id="theme-select" value="light" />
           <button type="button" class="header-icon" id="compact-toggle" aria-label="Компактный режим" title="Компактный режим">▥</button>
           <button type="button" class="header-icon" id="sound-toggle" aria-label="Включить звуки" title="Звуки">♪</button>
           <button type="button" class="header-icon" id="trash-button" aria-label="Корзина" title="Корзина">♲</button>

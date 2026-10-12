@@ -31,7 +31,8 @@ const notice = document.getElementById("notice");
 
 let chosenTheme = null;
 try { chosenTheme = localStorage.getItem(THEME_KEY); } catch (_) { /* Storage is optional. */ }
-if (!["dark", "light", "pastel", "bright", "minimal"].includes(chosenTheme)) chosenTheme = null;
+if (["pastel", "bright", "minimal"].includes(chosenTheme)) chosenTheme = "light";
+if (!["dark", "light"].includes(chosenTheme)) chosenTheme = null;
 const systemTheme = window.matchMedia("(prefers-color-scheme: dark)");
 function applyTheme(dark) {
   document.documentElement.classList.toggle("dark", dark);
@@ -50,7 +51,6 @@ systemTheme.addEventListener?.("change", event => {
   if (!chosenTheme) {
     applyTheme(event.matches);
     document.documentElement.dataset.theme = event.matches ? "dark" : "light";
-    document.getElementById("theme-select").value = event.matches ? "dark" : "light";
   }
 });
 
@@ -136,7 +136,7 @@ function normalizeWorkspace(data) {
     boards, trash, settings: {
       compact: Boolean(settings.compact), sound: Boolean(settings.sound),
       zoom: Number.isFinite(settings.zoom) ? Math.max(70, Math.min(130, settings.zoom)) : 100,
-      theme: ["light", "dark", "pastel", "bright", "minimal"].includes(settings.theme) ? settings.theme : null,
+      theme: settings.theme === "dark" ? "dark" : ["light", "pastel", "bright", "minimal"].includes(settings.theme) ? "light" : null,
     } };
 }
 function initialWorkspace() {
@@ -1242,7 +1242,6 @@ document.getElementById("duplicate-card").addEventListener("click", () => {
 const tabs = document.getElementById("board-tabs");
 const boardNameDialog = document.getElementById("board-name-dialog");
 let boardNameTargetId = null;
-const themeSelect = document.getElementById("theme-select");
 const boardSearch = document.getElementById("board-search");
 const backgroundDialog = document.getElementById("background-dialog");
 const trashDialog = document.getElementById("trash-dialog");
@@ -1283,13 +1282,9 @@ function playSound(kind) {
   } catch (_) { /* Sound is optional. */ }
 }
 function setThemePreset(theme, persist = true) {
-  if (!["light", "dark", "pastel", "bright", "minimal"].includes(theme)) return;
+  if (!["light", "dark"].includes(theme)) return;
   document.documentElement.dataset.theme = theme;
-  themeSelect.value = theme;
   applyTheme(theme === "dark");
-  document.querySelector('meta[name="theme-color"]').content = {
-    light: "#f7f9f3", dark: "#000000", pastel: "#f8f4fb", bright: "#fff8e8", minimal: "#f5f5f5",
-  }[theme];
   if (persist) {
     chosenTheme = theme;
     workspace.settings.theme = theme;
@@ -1358,7 +1353,6 @@ function applyBoardAppearance() {
   boardScroll.classList.toggle("living-background", current.animated);
   document.getElementById("background-button").classList.toggle("has-custom-background", current.background !== "plain" || current.animated);
 }
-themeSelect.addEventListener("change", () => setThemePreset(themeSelect.value));
 function applySearch() {
   const query = boardSearch.value.trim().toLocaleLowerCase("ru");
   board.querySelectorAll(".card").forEach(element => {

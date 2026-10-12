@@ -108,6 +108,8 @@ function startApp() {
 (async () => {
   const app = startApp();
   assert.ok(htmlIds.has("quick-attachment-file"), "previously cached scripts can still initialize");
+  assert.doesNotMatch(html, /<select id="theme-select"/, "the theme dropdown is removed");
+  assert.match(html, /<input type="hidden" id="theme-select"/, "cached scripts can still initialize");
   assert.match(html, /id="background-button"[^>]*>\s*<span[^>]*>◐<\/span>\s*Фон<\/button>/,
     "the background settings have a labeled header button");
   assert.equal(app.api.getWorkspace().boards.length, 1);
@@ -173,9 +175,11 @@ function startApp() {
   app.api.getColumns()[0].cards.push(second);
   app.api.moveCard(second.id, firstColumnId, { columnId: firstColumnId, index: 0 });
   assert.equal(app.api.getColumns()[0].cards[0].id, firstId, "pinned cards remain above ordinary cards");
-  app.fields["theme-select"].value = "pastel"; app.fields["theme-select"].fire("change");
+  app.fields["theme-toggle"].click();
+  assert.equal(app.api.getWorkspace().settings.theme, "dark", "the button selects the dark theme");
+  app.fields["theme-toggle"].click();
   app.fields["compact-toggle"].click(); app.fields["zoom-out"].click();
-  assert.equal(app.api.getWorkspace().settings.theme, "pastel");
+  assert.equal(app.api.getWorkspace().settings.theme, "light", "the button returns to the light theme");
   assert.equal(app.api.getWorkspace().settings.compact, true);
   assert.equal(app.api.getWorkspace().settings.zoom, 90);
   app.fields["background-button"].click(); app.fields["background-options"].children[1].click();
@@ -211,6 +215,9 @@ function startApp() {
   assert.equal(app.api.getColumns()[0].cards[0].title, "Первая задача", "switching boards preserves cards");
   const text = app.api.boardFileText();
   assert.equal(app.api.parseWorkspaceFile(text).boards.length, 2, "TXT contains all boards");
+  const oldThemeFile = JSON.parse(text); oldThemeFile.settings.theme = "pastel";
+  assert.equal(app.api.parseWorkspaceFile(JSON.stringify(oldThemeFile)).settings.theme, "light",
+    "older bright themes open in light mode");
   assert.match(app.api.parseWorkspaceFile(text).boards[0].background, /^data:image\/jpeg;base64,/,
     "TXT keeps the custom background image");
   assert.equal(app.api.parseWorkspaceFile(text).boards[0].animated, true,
